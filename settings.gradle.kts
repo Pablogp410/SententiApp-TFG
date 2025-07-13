@@ -16,6 +16,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven(url = "https://oss.sonatype.org/content/repositories/ksoap2-android-releases/")
+        //maven(url = "https://jitpack.io")
     }
 }
 

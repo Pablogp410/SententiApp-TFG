@@ -19,9 +19,9 @@ fun AppNavigation() {
         composable("myquotes") { MyQuotesScreen(navController) }
         composable(
             route = "articles/{id}",
-            arguments = listOf(navArgument("id") { type = NavType.StringType })
+            arguments = listOf(navArgument("id") { type = NavType.IntType })
         ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("id")
+            val id = backStackEntry.arguments?.getInt("id") ?: 0
             ArticleScreen(navController, id)
         }
     }

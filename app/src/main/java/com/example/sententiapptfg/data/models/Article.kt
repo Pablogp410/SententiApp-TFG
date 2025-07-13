@@ -1,4 +1,4 @@
-package com.example.sententiapptfg.data
+package com.example.sententiapptfg.data.models
 
 data class Article(
     val id: String,

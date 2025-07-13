@@ -47,6 +47,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyQuotesScreen(navController: NavHostController){
+    val scrollState = rememberScrollState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -163,7 +164,7 @@ fun MyQuotesBody(navController: NavHostController, modifier: Modifier) {
             Text("No has interactuado con ninguna sentencia todavía.")
         } else {
             filteredQuotes.forEach { quote ->
-                AddQuote(quote)
+                AddQuote(quote.id)
             }
         }
     }

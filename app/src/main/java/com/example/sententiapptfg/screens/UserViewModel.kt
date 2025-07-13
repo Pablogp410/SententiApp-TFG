@@ -1,7 +1,7 @@
 package com.example.sententiapptfg.screens
 
 import androidx.compose.runtime.mutableStateListOf
-import com.example.sententiapptfg.data.Quote
+import com.example.sententiapptfg.data.models.Quote
 
 object UserInteractions {
     val likedQuotes = mutableStateListOf<Quote>()

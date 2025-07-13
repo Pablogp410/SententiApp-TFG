@@ -1,4 +1,4 @@
-package com.example.sententiapptfg.data
+package com.example.sententiapptfg.data.models
 
 data class Quote(
     val id: String,
@@ -6,8 +6,6 @@ data class Quote(
     val spanishQuote: String,
     val englishQuote: String,
     val author: String,
-    val likes: Int,
-    val favorites: Int,
-    val dislikes: Int,
-    val funny: Int
+    val category: String,
+    val article: String
 )

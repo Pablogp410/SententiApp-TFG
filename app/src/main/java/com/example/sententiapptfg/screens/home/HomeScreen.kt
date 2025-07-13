@@ -1,5 +1,6 @@
 package com.example.sententiapptfg.screens.home
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -39,16 +40,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavHostController
-import com.example.sententiapptfg.data.Article
-import com.example.sententiapptfg.data.Quote
+import com.example.sententiapptfg.data.models.Article
+import com.example.sententiapptfg.data.models.Quote
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,9 +63,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.sententiapptfg.R
-import com.example.sententiapptfg.data.ArticleCategory
+import com.example.sententiapptfg.data.SententiAppRepository
+import com.example.sententiapptfg.data.SoapService
+import com.example.sententiapptfg.data.models.ArticleCategory
+import com.example.sententiapptfg.data.models.Date
 import com.example.sententiapptfg.navigation.Footer
 import com.example.sententiapptfg.navigation.Menu
 import kotlinx.coroutines.launch
@@ -75,6 +80,17 @@ import kotlinx.coroutines.launch
 fun HomeScreen(navController: NavHostController) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val viewModel = remember {
+        HomeViewModel(SententiAppRepository(SoapService()))
+    }
+
+    val dates by viewModel.filteredDates
+    val categories by viewModel.categories
+
+    LaunchedEffect(Unit) {
+        viewModel.loadDates()
+        viewModel.loadCategories()
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -111,42 +127,50 @@ fun HomeScreen(navController: NavHostController) {
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                HomeBody(navController = navController, modifier = Modifier)
+                HomeBody(
+                    dates = dates,
+                    categories = categories,
+                    onCategorySelected = { category ->
+                        viewModel.loadDatesByCategory(category)
+                    },
+                    navController = navController,
+                    modifier = Modifier
+                )
                 Footer()
             }
         }
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeBody(modifier: Modifier, navController: NavHostController){
-    /*LOADING DATA*/
+fun HomeBody(dates: List<Date>, categories: List<String>, onCategorySelected: (String?) -> Unit, navController: NavHostController, modifier: Modifier = Modifier) {
     val goldenColor = Color(red = 225, green = 165, blue = 75)
-    val articles = testArticles()
-    val categories = articles.map { it.category }.distinct()
     val context = LocalContext.current
     var searchQuery by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf<ArticleCategory?>(null) }
-    val filteredArticles = articles.filter { article ->
-        (selectedCategory == null || article.category == selectedCategory) &&
-                article.title.contains(searchQuery, ignoreCase = true)
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
+
+    val filteredDates = dates.filter { date ->
+        date.tag.contains(searchQuery, ignoreCase = true)
     }
-    Column (
-        modifier = Modifier.fillMaxWidth().padding(10.dp),
+
+    Column(
+        modifier = modifier.fillMaxWidth().padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
-    ){
-        /*LOGO*/
-        Row(
-            horizontalArrangement = Arrangement.Center
-        ){
-            Image(painterResource(id = R.drawable.logotipo),
+    ) {
+        /* LOGO */
+        Row(horizontalArrangement = Arrangement.Center) {
+            Image(
+                painterResource(id = R.drawable.logotipo),
                 contentDescription = "logo",
                 modifier = Modifier.height(150.dp)
             )
         }
+
         Spacer(modifier = Modifier.height(20.dp))
-        /*SEARCH BAR*/
+
+        /* SEARCH BAR */
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -176,12 +200,13 @@ fun HomeBody(modifier: Modifier, navController: NavHostController){
                 imageVector = Icons.Default.Search,
                 contentDescription = "Search Icon",
                 tint = Color.Gray,
-                modifier = Modifier
-                    .size(24.dp)
+                modifier = Modifier.size(24.dp)
             )
         }
+
         Spacer(modifier = Modifier.height(20.dp))
-        /*CATEGORIES*/
+
+        /* CATEGORIES */
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
@@ -191,7 +216,10 @@ fun HomeBody(modifier: Modifier, navController: NavHostController){
             item {
                 FilterChip(
                     selected = selectedCategory == null,
-                    onClick = { selectedCategory = null },
+                    onClick = {
+                        selectedCategory = null
+                        onCategorySelected(null)
+                    },
                     label = { Text("Todos") },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = goldenColor,
@@ -205,8 +233,12 @@ fun HomeBody(modifier: Modifier, navController: NavHostController){
             items(categories) { category ->
                 FilterChip(
                     selected = selectedCategory == category,
-                    onClick = { selectedCategory = category },
-                    label = { Text(category.name) },
+                    onClick = {
+                        selectedCategory = category
+                        onCategorySelected(category)
+                        Log.d("CategoryScreen", "Category selection: $category")
+                    },
+                    label = { Text(category) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = goldenColor,
                         selectedLabelColor = Color.White,
@@ -216,24 +248,26 @@ fun HomeBody(modifier: Modifier, navController: NavHostController){
                 )
             }
         }
-        /*ARTICLES*/
+
+        /* DATES LIST */
         Column {
-            for (article in filteredArticles) {
+            for (date in filteredDates) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(100.dp)
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color.Black.copy(alpha = 0.1f)) // fallback si no carga la imagen
-                        .clickable { navController.navigate("articles/${article.id}") }
+                        .background(Color.Black.copy(alpha = 0.1f))
+                        .clickable { navController.navigate("articles/${date.id}") }
                         .shadow(4.dp, RoundedCornerShape(12.dp))
                 ) {
-                    val imageResId = context.resources.getIdentifier(article.imagePath, "drawable", context.packageName)
-                    val mainImage = if (imageResId != 0) imageResId else R.drawable.mockup
-
+                    val imageUrl = "https://sententiapp.iatext.ulpgc.es/img/fechas/${date.image}"
                     Image(
-                        painter = painterResource(mainImage),
+                        painter = rememberAsyncImagePainter(
+                            model = imageUrl,
+                            error = painterResource(R.drawable.mockup)
+                        ),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
@@ -241,28 +275,30 @@ fun HomeBody(modifier: Modifier, navController: NavHostController){
                             .clip(RoundedCornerShape(12.dp))
                     )
 
-                    /*Overlay*/
                     Box(
                         modifier = Modifier
                             .matchParentSize()
                             .background(
                                 Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)),
-                                startY = 50f
-                            ))
+                                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)),
+                                    startY = 50f
+                                )
+                            )
                             .clip(RoundedCornerShape(12.dp))
                     )
 
                     Row(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal= 16.dp),
+                            .padding(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        /*ICON IMAGE*/
                         Image(
-                            painter = painterResource(mainImage),
+                            painter = rememberAsyncImagePainter(
+                                model = imageUrl,
+                                error = painterResource(R.drawable.mockup)
+                            ),
                             contentDescription = null,
                             modifier = Modifier
                                 .size(50.dp)
@@ -273,22 +309,19 @@ fun HomeBody(modifier: Modifier, navController: NavHostController){
 
                         Spacer(modifier = Modifier.width(16.dp))
 
-                        /*TITLE AND DATE*/
                         Column(
                             modifier = Modifier.fillMaxWidth().padding(end = 4.dp)
                         ) {
                             Text(
-                                text = article.title,
+                                text = date.tag,
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp,
-                                lineHeight = 18.sp,
                                 maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.fillMaxWidth()
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                text = article.date,
+                                text = date.day,
                                 color = goldenColor,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 10.sp,
@@ -301,21 +334,6 @@ fun HomeBody(modifier: Modifier, navController: NavHostController){
             }
         }
     }
-}
-
-@Composable
-fun testArticles() : List<Article>{
-    val testQuote = Quote(id = "0", latinQuote = "Sentencia en latín", spanishQuote = "Sentencia en español", englishQuote = "Sentencia en inglés", author = "author", likes = 0, favorites = 0, dislikes = 0, funny = 0)
-    val testQuote2 = Quote(id = "3", latinQuote = "Lorem Ipsum etc", spanishQuote = "Sentencia en español", englishQuote = "Sentencia en inglés", author = "Miguel", likes = 3, favorites = 2, dislikes = 1, funny = 0)
-    val testList = listOf(testQuote, testQuote2)
-    val article1 = Article(id = "0", title = "Día Internacional de la Educación", description = "Descripción del artículo día internacional de la educación", quotes = testList, date = "24 de Enero de 2024", imagePath = "mockup", category = ArticleCategory.Amor)
-    val article2 = Article(id = "1", title = "Día Internacional de la Codicia", description = "Descripción del artículo día internacional de la codicia", quotes = testList, date = "29 de Febrero de 2024", imagePath = "mockup",  category = ArticleCategory.Codicia)
-    val article3 = Article(id = "3", title = "Día Internacional de la Educación con un titulo mas largo", description = "Descripción del artículo día internacional de la educación", quotes = testList, date = "24 de Enero de 2024", imagePath = "mockup", category = ArticleCategory.Amor)
-    val article4 = Article(id = "345", title = "Día Internacional de la Educación", description = "Descripción del artículo día internacional de la educación", quotes = testList, date = "24 de Enero de 2024", imagePath = "mockup", category = ArticleCategory.Amor)
-    val article5 = Article(id = "1", title = "Día Internacional de la Codicia con un titulo mas largo", description = "Descripción del artículo día internacional de la codicia", quotes = testList, date = "29 de Febrero de 2024", imagePath = "mockup",  category = ArticleCategory.Codicia)
-    val article6 = Article(id = "1", title = "Día Internacional de los Defectos", description = "Descripción del artículo día internacional de la codicia", quotes = testList, date = "29 de Febrero de 2024", imagePath = "mockup",  category = ArticleCategory.Defectos)
-    val articlesList = listOf(article1,article2,article3,article4,article5,article6)
-    return articlesList
 }
 
 @Preview(showBackground = true)
