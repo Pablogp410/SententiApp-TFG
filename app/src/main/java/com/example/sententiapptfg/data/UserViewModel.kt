@@ -1,4 +1,4 @@
-package com.example.sententiapptfg.screens
+package com.example.sententiapptfg.data
 
 import androidx.compose.runtime.mutableStateListOf
 import com.example.sententiapptfg.data.models.Quote

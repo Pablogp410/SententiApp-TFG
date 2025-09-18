@@ -1,6 +1,7 @@
 package com.example.sententiapptfg.screens.home
 
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -8,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -23,8 +25,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -41,7 +47,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavHostController
-import com.example.sententiapptfg.data.models.Article
 import com.example.sententiapptfg.data.models.Quote
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -50,6 +55,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -59,6 +65,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -69,7 +76,6 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.sententiapptfg.R
 import com.example.sententiapptfg.data.SententiAppRepository
 import com.example.sententiapptfg.data.SoapService
-import com.example.sententiapptfg.data.models.ArticleCategory
 import com.example.sententiapptfg.data.models.Date
 import com.example.sententiapptfg.navigation.Footer
 import com.example.sententiapptfg.navigation.Menu
@@ -136,6 +142,7 @@ fun HomeScreen(navController: NavHostController) {
                     navController = navController,
                     modifier = Modifier
                 )
+                Spacer(modifier = Modifier.weight(1f))
                 Footer()
             }
         }
@@ -175,39 +182,45 @@ fun HomeBody(dates: List<Date>, categories: List<String>, onCategorySelected: (S
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(20.dp))
-                .border(1.dp, Color.Gray, shape = RoundedCornerShape(20.dp))
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .border(1.dp, goldenColor, shape = RoundedCornerShape(20.dp))
+                .padding(horizontal = 12.dp, vertical = 0.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             TextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Buscar...") },
+                placeholder = {
+                    Text("Buscar...", color = goldenColor, modifier=Modifier.fillMaxWidth())
+                },
                 modifier = Modifier
                     .weight(1f)
                     .background(Color.Transparent),
                 colors = TextFieldDefaults.textFieldColors(
                     containerColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent,
+                    cursorColor = goldenColor,
+                    focusedLabelColor = goldenColor,
+                    unfocusedLabelColor = goldenColor
                 ),
                 maxLines = 1,
-                singleLine = true
+                singleLine = true,
+                textStyle = TextStyle(color = goldenColor),
             )
-
             Icon(
                 imageVector = Icons.Default.Search,
                 contentDescription = "Search Icon",
-                tint = Color.Gray,
-                modifier = Modifier.size(24.dp)
+                tint = goldenColor,
+                modifier = Modifier.size(20.dp)
             )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        /* CATEGORIES */
-        LazyRow(
+        /* OLD CATEGORIES */
+        /*LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -236,7 +249,6 @@ fun HomeBody(dates: List<Date>, categories: List<String>, onCategorySelected: (S
                     onClick = {
                         selectedCategory = category
                         onCategorySelected(category)
-                        Log.d("CategoryScreen", "Category selection: $category")
                     },
                     label = { Text(category) },
                     colors = FilterChipDefaults.filterChipColors(
@@ -247,11 +259,108 @@ fun HomeBody(dates: List<Date>, categories: List<String>, onCategorySelected: (S
                     )
                 )
             }
+        }*/
+
+        /*NEW CATEGORIES*/
+        /* CATEGORIES */
+        val categoriesPerPage = 3
+        val totalPagesCategories = (categories.size + categoriesPerPage - 1) / categoriesPerPage
+        var currentCategoryPage by remember { mutableIntStateOf(0) }
+
+        val startIndex = currentCategoryPage * categoriesPerPage
+        val endIndex = minOf(startIndex + categoriesPerPage, categories.size)
+        val visibleCategories = categories.subList(startIndex, endIndex)
+
+        val borderStroke = BorderStroke(1.dp, goldenColor)
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // PREV BUTTON
+            if (totalPagesCategories > 1) {
+                IconButton(
+                    onClick = {
+                        currentCategoryPage = if (currentCategoryPage > 0) currentCategoryPage - 1 else totalPagesCategories - 1
+                    }
+                ) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Previous", tint = goldenColor)
+                }
+            }
+
+            LazyRow(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 0.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                item {
+                    val isSelected = selectedCategory == null
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = {
+                            selectedCategory = null
+                            onCategorySelected(null)
+                        },
+                        label = { Text("Todos") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = goldenColor,
+                            selectedLabelColor = Color.White,
+                            containerColor = Color.Transparent,
+                            labelColor = goldenColor
+                        ),
+                        border = if (isSelected) null else borderStroke
+                    )
+                }
+
+                items(visibleCategories) { category ->
+                    val isSelected = selectedCategory == category
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = {
+                            selectedCategory = category
+                            onCategorySelected(category)
+                        },
+                        label = { Text(category) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = goldenColor,
+                            selectedLabelColor = Color.White,
+                            containerColor = Color.Transparent,
+                            labelColor = goldenColor
+                        ),
+                        border = if (isSelected) null else borderStroke
+                    )
+                }
+            }
+
+            // NEXT BUTTON
+            if (totalPagesCategories > 1) {
+                IconButton(
+                    onClick = {
+                        currentCategoryPage = (currentCategoryPage + 1) % totalPagesCategories
+                    }
+                ) {
+                    Icon(Icons.Default.ArrowForward, contentDescription = "Next", tint = goldenColor)
+                }
+            }
         }
 
+
+
         /* DATES LIST */
-        Column {
-            for (date in filteredDates) {
+        val pageSize = 10
+        var currentPage by remember { mutableIntStateOf(0) }
+
+        LaunchedEffect(selectedCategory) {
+            currentPage = 0
+        }
+
+        val totalPages = (filteredDates.size + pageSize - 1) / pageSize
+        val pagedDates = filteredDates.drop(currentPage * pageSize).take(pageSize)
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            for (date in pagedDates) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -280,8 +389,11 @@ fun HomeBody(dates: List<Date>, categories: List<String>, onCategorySelected: (S
                             .matchParentSize()
                             .background(
                                 Brush.verticalGradient(
-                                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)),
-                                    startY = 50f
+                                    colors = listOf(
+                                        Color.Black.copy(alpha = 0.2f),
+                                        Color.Black.copy(alpha = 0.7f)
+                                    ),
+                                    startY = 0f
                                 )
                             )
                             .clip(RoundedCornerShape(12.dp))
@@ -317,14 +429,15 @@ fun HomeBody(dates: List<Date>, categories: List<String>, onCategorySelected: (S
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp,
+                                lineHeight = 18.sp,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = date.day,
                                 color = goldenColor,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 12.sp,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -332,7 +445,49 @@ fun HomeBody(dates: List<Date>, categories: List<String>, onCategorySelected: (S
                     }
                 }
             }
+            // PAGINATION
+            if (totalPages > 1) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        onClick = { if (currentPage > 0) currentPage-- },
+                        enabled = currentPage > 0,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = goldenColor,
+                            contentColor = Color.White,
+                            disabledContainerColor = goldenColor.copy(alpha = 0.4f),
+                            disabledContentColor = Color.White.copy(alpha = 0.6f)
+                        )
+                    ) {
+                        Text("Anterior")
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Text("Página ${currentPage + 1} de $totalPages")
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Button(
+                        onClick = { if (currentPage < totalPages - 1) currentPage++ },
+                        enabled = currentPage < totalPages - 1,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = goldenColor,
+                            contentColor = Color.White,
+                            disabledContainerColor = goldenColor.copy(alpha = 0.4f),
+                            disabledContentColor = Color.White.copy(alpha = 0.6f)
+                        )
+                    ) {
+                        Text("Siguiente")
+                    }
+                }
+            }
         }
+
     }
 }
 

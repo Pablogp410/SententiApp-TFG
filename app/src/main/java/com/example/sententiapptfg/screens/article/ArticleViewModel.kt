@@ -68,7 +68,7 @@ class ArticleViewModel(private val repository: SententiAppRepository) : ViewMode
                 val filtered = allDates
                     .filter { it.id != excludeId }
                     .shuffled()
-                    .take(3)
+                    //.take(3)
                 _otherDates.value = filtered
             } catch (e: Exception) {
                 e.printStackTrace()

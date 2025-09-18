@@ -1,10 +1,17 @@
 package com.example.sententiapptfg.screens.article
 
 import android.content.Intent
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.with
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +26,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -49,7 +57,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -68,7 +78,8 @@ import com.example.sententiapptfg.data.SoapService
 import com.example.sententiapptfg.data.models.Date
 import com.example.sententiapptfg.data.models.Quote
 import com.example.sententiapptfg.navigation.Footer
-import com.example.sententiapptfg.screens.UserInteractions
+import com.example.sententiapptfg.data.UserInteractions
+import kotlinx.coroutines.delay
 
 @Composable
 fun ArticleScreen(navController: NavHostController, dateId:Int){
@@ -88,16 +99,6 @@ fun ArticleScreen(navController: NavHostController, dateId:Int){
         viewModel.loadQuotes(dateId)
 
         kotlinx.coroutines.delay(500)
-
-        //println(">>> Date details loaded: ${date?.details}")
-        //println(">>> Quotes loaded: $quotes")
-
-        val firstQuote = viewModel.quotes.value.firstOrNull()
-        if (firstQuote != null) {
-            viewModel.loadQuoteDetails(firstQuote.id) { quoteDetails ->
-                println(">>> Loaded Quote Details: $quoteDetails")
-            }
-        }
     }
 
     Box(
@@ -122,6 +123,7 @@ fun ArticleScreen(navController: NavHostController, dateId:Int){
 
 @Composable
 fun ArticleBody(navController: NavHostController, date: Date, quotes: List<Quote>){
+    val goldenColor = Color(red = 225, green = 165, blue = 75)
     //val articles = testArticles()
     val context = LocalContext.current
     Box(
@@ -142,6 +144,19 @@ fun ArticleBody(navController: NavHostController, date: Date, quotes: List<Quote
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Black.copy(alpha = 0.1f),
+                                    Color.Black.copy(alpha = 0.6f)
+                                ),
+                                startY = 0f
+                            )
+                        )
+                )
                 Image(
                     painter = painterResource(id = R.drawable.pagina_rota),
                     contentDescription = "logo",
@@ -154,7 +169,7 @@ fun ArticleBody(navController: NavHostController, date: Date, quotes: List<Quote
                 modifier = Modifier.fillMaxWidth().padding(20.dp)
             ) {
                 Text(text = date.tag, fontWeight = FontWeight.Bold,
-                    fontSize = 30.sp)
+                    fontSize = 30.sp, lineHeight = 36.sp)
                 Spacer(modifier = Modifier.height(20.dp))
                 Text(text=date.details, fontSize = 15.sp, fontWeight = FontWeight.Light)
                 Spacer(modifier = Modifier.height(20.dp))
@@ -181,14 +196,15 @@ fun ArticleBody(navController: NavHostController, date: Date, quotes: List<Quote
             Icon(
                 imageVector = Icons.Default.ArrowBack,
                 contentDescription = "ArrowBack",
-                tint = Color.White
-            )
+                tint = Color.White            )
         }
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AddQuote(quoteId: String) {
+    val goldenColor = Color(red = 225, green = 165, blue = 75)
     val context = LocalContext.current
     val viewModel = remember {
         ArticleViewModel(SententiAppRepository(SoapService()))
@@ -196,7 +212,6 @@ fun AddQuote(quoteId: String) {
     var loadedQuote by remember { mutableStateOf<Quote?>(null) }
     LaunchedEffect(quoteId) {
         viewModel.loadQuoteDetails(quoteId) { quoteDetails ->
-            println(">>> AddQuote recibió: $quoteDetails")
             loadedQuote = quoteDetails
         }
     }
@@ -239,6 +254,18 @@ fun AddQuote(quoteId: String) {
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .border(2.dp, Color(0xFFE1E1E1))
+            /* SLIDER */
+            /*.pointerInput(Unit) {
+                detectHorizontalDragGestures { _, dragAmount ->
+                    if (dragAmount > 50) {
+                        // SWIPE RIGHT
+                        currentLanguageIndex = (currentLanguageIndex - 1 + languages.size) % languages.size
+                    } else if (dragAmount < -50) {
+                        // SWIPE LEFT
+                        currentLanguageIndex = (currentLanguageIndex + 1) % languages.size
+                    }
+                }
+            }*/
     ) {
         /*LEFT ARROW*/
         IconButton(
@@ -247,7 +274,7 @@ fun AddQuote(quoteId: String) {
             },
             modifier = Modifier.align(Alignment.CenterStart)
         ) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Previous Language")
+            Icon(Icons.Default.ArrowBack, contentDescription = "Previous Language", tint = goldenColor)
         }
 
         /*QUOTE CONTENT*/
@@ -257,12 +284,20 @@ fun AddQuote(quoteId: String) {
                 .align(Alignment.Center)
                 .padding(12.dp)
         ) {
-            Text(
-                text = currentQuoteText,
-                fontSize = 16.sp,
-                textAlign = TextAlign.Center,
+            /* LANGUAGE SWITCH TEXT ANIMATION*/
+            AnimatedContent(
+                targetState = currentQuoteText,
+                transitionSpec = {
+                    fadeIn(tween(300)) with fadeOut(tween(300))
+                },
                 modifier = Modifier.fillMaxWidth()
-            )
+            ) { targetText ->
+                Text(
+                    text = targetText,
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
 
             Divider(
                 color = Color.LightGray,
@@ -387,76 +422,106 @@ fun AddQuote(quoteId: String) {
             },
             modifier = Modifier.align(Alignment.CenterEnd)
         ) {
-            Icon(Icons.Default.ArrowForward, contentDescription = "Next Language")
+            Icon(Icons.Default.ArrowForward, contentDescription = "Next Language",  tint = goldenColor)
         }
     }
 }
 
 @Composable
-fun OtherDates(navController: NavHostController, id:Int){
-    val context = LocalContext.current
+fun OtherDates(navController: NavHostController, id: Int) {
     val viewModel = remember {
         ArticleViewModel(SententiAppRepository(SoapService()))
     }
     val dates by viewModel.otherDates.collectAsState()
+    val listState = rememberLazyListState()
     LaunchedEffect(id) {
         viewModel.loadOtherDates(id)
     }
-        /*OTRAS FECHAS*/
-        Column (
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-        ) {
-            Text(
-                text = "Otras fechas",
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
-            Spacer(modifier = Modifier.height(20.dp))
 
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                items(dates) { otherDate ->
+    // AUTO-SCROLL
+    LaunchedEffect(dates) {
+        if (dates.isNotEmpty()) {
+            while (true) {
+                delay(3000)
+                val visibleItem = listState.firstVisibleItemIndex
+                val nextIndex = if (visibleItem + 1 >= dates.size) 0 else visibleItem + 1
+                listState.animateScrollToItem(nextIndex)
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp)
+    ) {
+        Text(
+            text = "Otras fechas",
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+
+        LazyRow(
+            state = listState,
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally)
+        ) {
+            items(dates) { otherDate ->
+                Box(
+                    modifier = Modifier
+                        .width(116.dp)
+                        .aspectRatio(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { navController.navigate("articles/${otherDate.id}") }
+                ) {
+                    val imageUrl = "https://sententiapp.iatext.ulpgc.es/img/fechas/${otherDate.image}"
+                    Image(
+                        painter = rememberAsyncImagePainter(
+                            model = imageUrl,
+                            error = painterResource(R.drawable.mockup)
+                        ),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clip(RoundedCornerShape(12.dp))
+                    )
                     Box(
                         modifier = Modifier
-                            .width(110.dp)
-                            .aspectRatio(1f)
-                            .clickable { navController.navigate("articles/${otherDate.id}") }
-                    ) {
-                        val imageUrl = "https://sententiapp.iatext.ulpgc.es/img/fechas/${otherDate.image}"
-                        Image(
-                            painter = rememberAsyncImagePainter(
-                                model = imageUrl,
-                                error = painterResource(R.drawable.mockup)
-                            ),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clip(RoundedCornerShape(12.dp))
-                        )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(8.dp),
-                            contentAlignment = Alignment.BottomStart
-                        ) {
-                            Text(
-                                text = otherDate.tag,
-                                fontSize = 15.sp,
-                                color = Color.White,
-                                maxLines = 3,
-                                overflow = TextOverflow.Ellipsis
+                            .matchParentSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Black.copy(alpha = 0.1f),
+                                        Color.Black.copy(alpha = 0.6f)
+                                    ),
+                                    startY = 0f
+                                )
                             )
-                        }
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(8.dp),
+                        contentAlignment = Alignment.BottomStart
+                    ) {
+                        Text(
+                            text = otherDate.tag,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                            lineHeight = 14.sp
+                        )
                     }
                 }
             }
         }
+    }
 }
+
 
 @Preview(showBackground = true)
 @Composable

@@ -1,5 +1,6 @@
 package com.example.sententiapptfg.screens.myquotes
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -40,7 +41,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.sententiapptfg.navigation.Footer
 import com.example.sententiapptfg.navigation.Menu
-import com.example.sententiapptfg.screens.UserInteractions
+import com.example.sententiapptfg.data.UserInteractions
 import com.example.sententiapptfg.screens.article.AddQuote
 import kotlinx.coroutines.launch
 
@@ -87,6 +88,7 @@ fun MyQuotesScreen(navController: NavHostController){
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 MyQuotesBody(navController = navController, modifier = Modifier)
+                Spacer(modifier = Modifier.weight(1f))
                 Footer()
             }
         }
@@ -108,6 +110,7 @@ fun MyQuotesBody(navController: NavHostController, modifier: Modifier) {
         null -> UserInteractions.allQuotes
         else -> emptyList()
     }
+    val borderStroke = BorderStroke(1.dp, goldenColor)
 
     Column(
         modifier = Modifier
@@ -131,29 +134,33 @@ fun MyQuotesBody(navController: NavHostController, modifier: Modifier) {
                 .padding(horizontal = 8.dp)
         ) {
             item {
+                val isSelected = selectedFilter == null
                 FilterChip(
-                    selected = selectedFilter == null,
+                    selected = isSelected,
                     onClick = { selectedFilter = null },
                     label = { Text("Todas") },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = goldenColor,
                         selectedLabelColor = Color.White,
-                        containerColor = Color(0xFFF0F0F0),
-                        labelColor = Color.Black
-                    )
+                        containerColor = Color.Transparent,
+                        labelColor = goldenColor
+                    ),
+                    border = if (isSelected) null else borderStroke
                 )
             }
             items(filters) { filter ->
+                val isSelected = selectedFilter == filter
                 FilterChip(
-                    selected = selectedFilter == filter,
+                    selected = isSelected,
                     onClick = { selectedFilter = filter },
                     label = { Text(filter) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = goldenColor,
                         selectedLabelColor = Color.White,
-                        containerColor = Color(0xFFF0F0F0),
-                        labelColor = Color.Black
-                    )
+                        containerColor = Color.Transparent,
+                        labelColor = goldenColor
+                    ),
+                    border = if (isSelected) null else borderStroke
                 )
             }
         }
