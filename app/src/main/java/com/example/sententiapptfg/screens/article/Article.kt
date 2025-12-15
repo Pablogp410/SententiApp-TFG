@@ -124,7 +124,6 @@ fun ArticleScreen(navController: NavHostController, dateId:Int){
 @Composable
 fun ArticleBody(navController: NavHostController, date: Date, quotes: List<Quote>){
     val goldenColor = Color(red = 225, green = 165, blue = 75)
-    //val articles = testArticles()
     val context = LocalContext.current
     Box(
     ){
@@ -132,58 +131,9 @@ fun ArticleBody(navController: NavHostController, date: Date, quotes: List<Quote
             modifier = Modifier.fillMaxWidth()
         ){
             /*ARTICLE IMAGE*/
-            Box(modifier = Modifier.fillMaxWidth().height(200.dp)
-            ) {
-                val imageUrl = "https://sententiapp.iatext.ulpgc.es/img/fechas/${date.image}"
-                Image(
-                    painter = rememberAsyncImagePainter(
-                        model = imageUrl,
-                        error = painterResource(R.drawable.mockup)
-                    ),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Black.copy(alpha = 0.1f),
-                                    Color.Black.copy(alpha = 0.6f)
-                                ),
-                                startY = 0f
-                            )
-                        )
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.pagina_rota),
-                    contentDescription = "logo",
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                )
-            }
+            ArticleImage(date)
             /*ARTICLE TITLE, DESCRIPTION AND QUOTES*/
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(20.dp)
-            ) {
-                Text(text = date.tag, fontWeight = FontWeight.Bold,
-                    fontSize = 30.sp, lineHeight = 36.sp)
-                Spacer(modifier = Modifier.height(20.dp))
-                Text(text=date.details, fontSize = 15.sp, fontWeight = FontWeight.Light)
-                Spacer(modifier = Modifier.height(20.dp))
-                Text(text= "Sentencias", fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp)
-                Spacer(modifier = Modifier.height(20.dp))
-                Text(text= "Para ver las traducciones, deslice la sentencia a la izquierda o derecha con el dedo o haga clic en las flechas de los extremos.",  fontSize = 15.sp, fontWeight = FontWeight.Light)
-                Spacer(modifier = Modifier.height(20.dp))
-                /*QUOTES*/
-                for (quote in quotes){
-                    AddQuote(quote.id)
-                    Spacer(modifier = Modifier.height(4.dp))
-                }
-            }
+            ArticleInfo(date, quotes)
             OtherDates(navController, date.id)
         }
         /*ARROW BACK HOME ICON*/
@@ -198,6 +148,81 @@ fun ArticleBody(navController: NavHostController, date: Date, quotes: List<Quote
                 contentDescription = "ArrowBack",
                 tint = Color.White            )
         }
+    }
+}
+
+@Composable
+private fun ArticleInfo(
+    date: Date,
+    quotes: List<Quote>
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp)
+    ) {
+        Text(
+            text = date.tag, fontWeight = FontWeight.Bold,
+            fontSize = 30.sp, lineHeight = 36.sp
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(text = date.details, fontSize = 15.sp, fontWeight = FontWeight.Light)
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            text = "Sentencias", fontWeight = FontWeight.Bold,
+            fontSize = 20.sp
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            text = "Para ver las traducciones, deslice la sentencia a la izquierda o derecha con el dedo o haga clic en las flechas de los extremos.",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Light
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+        /*QUOTES*/
+        for (quote in quotes) {
+            AddQuote(quote.id)
+            Spacer(modifier = Modifier.height(4.dp))
+        }
+    }
+}
+
+@Composable
+private fun ArticleImage(date: Date) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+    ) {
+        val imageUrl = "https://sententiapp.iatext.ulpgc.es/img/fechas/${date.image}"
+        Image(
+            painter = rememberAsyncImagePainter(
+                model = imageUrl,
+                error = painterResource(R.drawable.mockup)
+            ),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Black.copy(alpha = 0.1f),
+                            Color.Black.copy(alpha = 0.6f)
+                        ),
+                        startY = 0f
+                    )
+                )
+        )
+        Image(
+            painter = painterResource(id = R.drawable.pagina_rota),
+            contentDescription = "logo",
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+        )
     }
 }
 

@@ -2,16 +2,17 @@ package com.example.sententiapptfg.screens.article
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.sententiapptfg.data.SententiAppRepository
+import com.example.sententiapptfg.data.ISententiAppRepository
 import com.example.sententiapptfg.data.models.Date
 import com.example.sententiapptfg.data.models.Quote
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ArticleViewModel(private val repository: SententiAppRepository) : ViewModel() {
+class ArticleViewModel(private val repository: ISententiAppRepository, private val dispatcher: CoroutineDispatcher = Dispatchers.IO) : ViewModel() {
     private val _dateDetails = MutableStateFlow<Date?>(null)
     val dateDetails: StateFlow<Date?> = _dateDetails
 
@@ -62,7 +63,7 @@ class ArticleViewModel(private val repository: SententiAppRepository) : ViewMode
     fun loadOtherDates(excludeId: Int) {
         viewModelScope.launch {
             try {
-                val allDates = withContext(Dispatchers.IO) {
+                val allDates = withContext(dispatcher) {
                     repository.getDates()
                 }
                 val filtered = allDates

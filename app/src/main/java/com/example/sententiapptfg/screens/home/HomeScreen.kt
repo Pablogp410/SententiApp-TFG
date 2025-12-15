@@ -219,49 +219,6 @@ fun HomeBody(dates: List<Date>, categories: List<String>, onCategorySelected: (S
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        /* OLD CATEGORIES */
-        /*LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp)
-        ) {
-            item {
-                FilterChip(
-                    selected = selectedCategory == null,
-                    onClick = {
-                        selectedCategory = null
-                        onCategorySelected(null)
-                    },
-                    label = { Text("Todos") },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = goldenColor,
-                        selectedLabelColor = Color.White,
-                        containerColor = Color(0xFFF0F0F0),
-                        labelColor = Color.Black
-                    )
-                )
-            }
-
-            items(categories) { category ->
-                FilterChip(
-                    selected = selectedCategory == category,
-                    onClick = {
-                        selectedCategory = category
-                        onCategorySelected(category)
-                    },
-                    label = { Text(category) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = goldenColor,
-                        selectedLabelColor = Color.White,
-                        containerColor = Color(0xFFF0F0F0),
-                        labelColor = Color.Black
-                    )
-                )
-            }
-        }*/
-
-        /*NEW CATEGORIES*/
         /* CATEGORIES */
         val categoriesPerPage = 3
         val totalPagesCategories = (categories.size + categoriesPerPage - 1) / categoriesPerPage

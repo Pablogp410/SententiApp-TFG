@@ -8,15 +8,12 @@ import com.example.sententiapptfg.data.models.Date
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.ksoap2.SoapEnvelope
-import org.ksoap2.serialization.SoapObject
-import org.ksoap2.serialization.SoapSerializationEnvelope
-import org.ksoap2.transport.HttpTransportSE
 import androidx.compose.runtime.State
-import com.example.sententiapptfg.data.SententiAppRepository
-import com.example.sententiapptfg.data.SoapService
+import com.example.sententiapptfg.data.ISententiAppRepository
+import kotlinx.coroutines.CoroutineDispatcher
 
-class HomeViewModel(private val repository: SententiAppRepository) : ViewModel() {
+
+class HomeViewModel(private val repository: ISententiAppRepository, private val dispatcher: CoroutineDispatcher = Dispatchers.IO) : ViewModel() {
 
     private val _dates = mutableStateOf<List<Date>>(emptyList())
     val dates: State<List<Date>> = _dates
@@ -29,7 +26,7 @@ class HomeViewModel(private val repository: SententiAppRepository) : ViewModel()
 
     fun loadDates() {
         viewModelScope.launch {
-            val newDates = withContext(Dispatchers.IO) {
+            val newDates = withContext(dispatcher) {
                 repository.getDates()
             }
             //Log.d("HomeViewModel", "Loaded dates: $newDates")
@@ -40,7 +37,7 @@ class HomeViewModel(private val repository: SententiAppRepository) : ViewModel()
 
     fun loadCategories() {
         viewModelScope.launch {
-            val newCategories = withContext(Dispatchers.IO) {
+            val newCategories = withContext(dispatcher) {
                 repository.getCategories()
             }
             newCategories.forEach { category ->
@@ -52,7 +49,7 @@ class HomeViewModel(private val repository: SententiAppRepository) : ViewModel()
 
     fun loadDatesByCategory(category: String?) {
         viewModelScope.launch {
-            val newDates = withContext(Dispatchers.IO) {
+            val newDates = withContext(dispatcher) {
                 if (category == null) repository.getDates()
                 else repository.getDatesByCategory(category)
             }
