@@ -67,9 +67,11 @@ dependencies {
     //implementation(libs.ksoap2.android)
     implementation("com.google.code.ksoap2-android:ksoap2-android:3.6.4")
     implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation(libs.androidx.navigation.testing.android)
+    //implementation(libs.androidx.ui.test.junit4.android)
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    //androidTestImplementation(libs.androidx.junit)
+    //androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
@@ -78,5 +80,21 @@ dependencies {
     testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
     testImplementation ("io.mockk:mockk:1.13.8")
     testImplementation ("junit:junit:4.13.2")
+
+    // ---------- Unit tests ----------
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
+    testImplementation("io.mockk:mockk:1.13.8")
+
+// ---------- Compose UI tests ----------
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+// Versiones FORZADAS compatibles con Compose
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
+
 
 }

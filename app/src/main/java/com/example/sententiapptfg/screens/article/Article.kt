@@ -48,8 +48,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,6 +64,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -81,12 +84,17 @@ import com.example.sententiapptfg.navigation.Footer
 import com.example.sententiapptfg.data.UserInteractions
 import kotlinx.coroutines.delay
 
+
+val LocalArticleViewModel = compositionLocalOf<ArticleViewModel> {
+    error("No ArticleViewModel provided")
+}
+
 @Composable
-fun ArticleScreen(navController: NavHostController, dateId:Int){
+fun ArticleScreen(navController: NavHostController, viewModel: ArticleViewModel, dateId:Int){
     val scrollState = rememberScrollState()
-    val viewModel = remember {
+    /*val viewModel = remember {
         ArticleViewModel(SententiAppRepository(SoapService()))
-    }
+    }*/
 
     //println(">>> DATEID: $dateId")
 
@@ -100,24 +108,26 @@ fun ArticleScreen(navController: NavHostController, dateId:Int){
 
         kotlinx.coroutines.delay(500)
     }
-
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        if (date != null && !isLoading) {
-            Column(
-                modifier = Modifier.fillMaxSize().background(Color.White).verticalScroll(scrollState),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ){
-                ArticleBody(navController, date!!, quotes)
-                Spacer(modifier = Modifier.weight(1f))
-                Footer()
+    CompositionLocalProvider(LocalArticleViewModel provides viewModel){
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            if (date != null && !isLoading) {
+                Column(
+                    modifier = Modifier.fillMaxSize().background(Color.White).verticalScroll(scrollState),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ){
+                    ArticleBody(navController, date!!, quotes)
+                    Spacer(modifier = Modifier.weight(1f))
+                    Footer()
+                }
+            } else {
+                CircularProgressIndicator(modifier = Modifier.testTag("loading"))
             }
-        } else {
-            CircularProgressIndicator()
         }
     }
+
 
 }
 
@@ -179,11 +189,29 @@ private fun ArticleInfo(
             fontWeight = FontWeight.Light
         )
         Spacer(modifier = Modifier.height(20.dp))
-        /*QUOTES*/
-        for (quote in quotes) {
-            AddQuote(quote.id)
-            Spacer(modifier = Modifier.height(4.dp))
+        /* QUOTES */
+        if (quotes.isEmpty()) {
+            Text(
+                text = "No hay sentencias disponibles",
+                modifier = Modifier.testTag("empty_quotes"),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Light,
+                color = Color.Gray,
+                textAlign = TextAlign.Center
+            )
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("quote_list")
+            ) {
+                for (quote in quotes) {
+                    AddQuote(quote.id)
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+            }
         }
+
     }
 }
 
@@ -229,11 +257,12 @@ private fun ArticleImage(date: Date) {
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AddQuote(quoteId: String) {
+    val viewModel = LocalArticleViewModel.current
     val goldenColor = Color(red = 225, green = 165, blue = 75)
     val context = LocalContext.current
-    val viewModel = remember {
+    /*val viewModel = remember {
         ArticleViewModel(SententiAppRepository(SoapService()))
-    }
+    }*/
     var loadedQuote by remember { mutableStateOf<Quote?>(null) }
     LaunchedEffect(quoteId) {
         viewModel.loadQuoteDetails(quoteId) { quoteDetails ->
@@ -551,5 +580,5 @@ fun OtherDates(navController: NavHostController, id: Int) {
 @Preview(showBackground = true)
 @Composable
 fun ArticlePreview(){
-    ArticleScreen(rememberNavController(), dateId = 0)
+    //ArticleScreen(rememberNavController(), dateId = 0)
 }

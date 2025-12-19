@@ -83,12 +83,12 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(navController: NavHostController, viewModel: HomeViewModel) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    val viewModel = remember {
+    /*val viewModel = remember {
         HomeViewModel(SententiAppRepository(SoapService()))
-    }
+    }*/
 
     val dates by viewModel.filteredDates
     val categories by viewModel.categories
@@ -451,5 +451,5 @@ fun HomeBody(dates: List<Date>, categories: List<String>, onCategorySelected: (S
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview(){
-    HomeScreen(rememberNavController())
+    //HomeScreen(rememberNavController(), HomeViewModel(SententiAppRepository(SoapService())))
 }
