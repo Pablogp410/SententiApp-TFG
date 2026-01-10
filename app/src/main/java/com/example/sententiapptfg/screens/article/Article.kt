@@ -206,7 +206,7 @@ private fun ArticleInfo(
                     .testTag("quote_list")
             ) {
                 for (quote in quotes) {
-                    AddQuote(quote.id)
+                    AddQuote(quote)
                     Spacer(modifier = Modifier.height(4.dp))
                 }
             }
@@ -256,14 +256,14 @@ private fun ArticleImage(date: Date) {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun AddQuote(quoteId: String) {
-    val viewModel = LocalArticleViewModel.current
+fun AddQuote(quote: Quote) {
+    //val viewModel = LocalArticleViewModel.current
     val goldenColor = Color(red = 225, green = 165, blue = 75)
     val context = LocalContext.current
     /*val viewModel = remember {
         ArticleViewModel(SententiAppRepository(SoapService()))
     }*/
-    var loadedQuote by remember { mutableStateOf<Quote?>(null) }
+    /*var loadedQuote by remember { mutableStateOf<Quote?>(null) }
     LaunchedEffect(quoteId) {
         viewModel.loadQuoteDetails(quoteId) { quoteDetails ->
             loadedQuote = quoteDetails
@@ -276,7 +276,7 @@ fun AddQuote(quoteId: String) {
         }
         return
     }
-    val quote = loadedQuote!!
+    val quote = loadedQuote!!*/
 
     /*var likes by remember { mutableStateOf(quote.likes) }
     var favorites by remember { mutableStateOf(quote.favorites) }
