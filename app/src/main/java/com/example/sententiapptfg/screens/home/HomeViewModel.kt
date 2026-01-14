@@ -40,9 +40,9 @@ class HomeViewModel(private val repository: ISententiAppRepository, private val 
             val newCategories = withContext(dispatcher) {
                 repository.getCategories()
             }
-            newCategories.forEach { category ->
+            /*newCategories.forEach { category ->
                 //Log.d("HomeViewModel", "Categoría recibida: $category")
-            }
+            }*/
             _categories.value = newCategories
         }
     }
